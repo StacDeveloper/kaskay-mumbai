@@ -5,7 +5,7 @@ const articleRoutes: Router = express.Router()
 
 articleRoutes.get("/getAllArticles", getAllArticles)
 articleRoutes.get("/:id", getArticleById)
-articleRoutes.get("/create-article", createArticle)
+articleRoutes.post("/create-article", createArticle)
 
 
 export default articleRoutes

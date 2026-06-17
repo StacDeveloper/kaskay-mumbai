@@ -4,18 +4,19 @@ export const articles = pgTable("articles", {
     id: uuid("id").defaultRandom().primaryKey(),
     title: text("title").notNull(),
     subtitle: text("subtitle"),
-    body: text("summary"),
+    summary:text("summary").notNull(),
+    body: text("body").notNull(),
     author: text("author"),
     source: text("source").default("Kasakay"),
-    sourceUrl: text("source_url").notNull(),
+    sourceUrl: text("source_url"),
     category: text("category").notNull(),
     tags: text("tags").array(),
     imageUrl: text("image_url"),
     isBreaking: boolean("is_breaking").default(false),
     isFeatured: boolean("is_featured").default(false),
-    readTimeMins: timestamp("read_time_mins").defaultNow(),
+    readTimeMins: integer("read_time_mins"),
     publishedAt: timestamp("publishedAt").defaultNow(),
-    createdAt: timestamp("updated_at").defaultNow(),
+    createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow()
 })
 
