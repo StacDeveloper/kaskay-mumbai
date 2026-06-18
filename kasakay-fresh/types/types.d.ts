@@ -1,5 +1,5 @@
 export type Article = {
-    
+
   id: string
   title: string
   summary: string | null
@@ -9,4 +9,7 @@ export type Article = {
   readTimeMins: number | null
   isFeatured: boolean
   publishedAt: string
+  subtitle?: string
+  body?:string
+  tags?:string[]
 } 
