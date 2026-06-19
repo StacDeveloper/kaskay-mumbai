@@ -9,7 +9,7 @@ interface Props {
 
 export default function ArticleCard({ article, onPress, featured = false }: Props) {
     if (featured) {
-        return <>
+        return (
             <TouchableOpacity onPress={onPress} className="mx-4 mb-4 bg-white rounded-2xl overflow-hidden">
                 <View className="h-48 bg-gray-200">
                     {article.imageUrl && (
@@ -34,7 +34,7 @@ export default function ArticleCard({ article, onPress, featured = false }: Prop
                 </View>
 
             </TouchableOpacity>
-        </>
+        )
     }
     return (
         <TouchableOpacity onPress={onPress} className="bg-white rounded-2xl overflow-hidden flex-1">

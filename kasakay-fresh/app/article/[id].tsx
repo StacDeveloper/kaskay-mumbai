@@ -3,24 +3,46 @@ import type { Article } from "../../types/types"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useEffect, useState } from "react"
 import axios from "axios"
+import * as speech from "expo-speech"
 
 const API_URL = "http://localhost:3000"
 
 const ArticleDetail = () => {
     const { id } = useLocalSearchParams()
     const router = useRouter()
-    const [article, SetArticle] = useState<Article | null>(null)
-    const [loading, SetLoading] = useState<boolean>(true)
+    const [article, setArticle] = useState<Article | null>(null)
+    const [loading, setLoading] = useState<boolean>(false)
+    const [speak, setSpeak] = useState<boolean>(false)
+
+    const handlegoBack = () => {
+        if (router.canGoBack()) {
+            router.back()
+        }
+        router.replace("/")
+    }
+
+    const handleSpeak = () => {
+        if (speak) {
+            setSpeak(false)
+            return
+        }
+        setSpeak(true)
+        speech.speak(article?.body!, {
+            language: "mr-IN",
+            onDone: () => setSpeak(false),
+            onError: () => setSpeak(false)
+        })
+    }
 
     const fetchParticularArticle = async (id: string) => {
+        setLoading(true)
         try {
             const findarticle = await axios.get(`${API_URL}/api/articles/${id}`)
-            SetArticle(findarticle.data.data)
-            console.log("FindArticle-Res", Object.keys(findarticle.data))
+            setArticle(findarticle.data.data[0])
         } catch (error) {
             console.log(error)
         } finally {
-            SetLoading(false)
+            setLoading(false)
         }
     }
     console.log(article)
@@ -45,7 +67,7 @@ const ArticleDetail = () => {
     return (
         <View className="flex-1 bg-white">
             <TouchableOpacity
-                onPress={() => router.back()}
+                onPress={handlegoBack}
                 className="absolute top-12 left-4 w-9 z-10 h-9 bg-white rounded-full items-center shadow "
             >
                 <Text className="text-gray-700 text-lg">←</Text>
@@ -77,8 +99,10 @@ const ArticleDetail = () => {
                         <Text className="text-gray-400 text-xs">{new Date(article.publishedAt).toLocaleDateString("mr-IN")}</Text>
                     </View>
 
-                    <TouchableOpacity className="flex-row items-center gap-2 mt-4 mb-5 bg-orange-50 self-start px-4 py-2 rounded-full">
-                        <Text className="text-orange-500 text-sm">🔊 हा लेख ऐका</Text>
+                    <TouchableOpacity
+                        onPress={handleSpeak}
+                        className="flex-row items-center gap-2 mt-4 mb-5 bg-orange-50 self-start px-4 py-2 rounded-full">
+                        <Text className="text-orange-500 text-sm">{speak ? "🔇" : "🔊 हा लेख ऐका"}</Text>
                     </TouchableOpacity>
 
                     {article.body && article.body.split("\n\n").map((para, i) => (
