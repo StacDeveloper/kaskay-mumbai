@@ -5,6 +5,10 @@ node_modules/
 sample
 # Expo
 .expo/
+.env
+.gitignore
+.env.local
+.env.*
 dist/
 web-build/
 expo-env.d.ts
