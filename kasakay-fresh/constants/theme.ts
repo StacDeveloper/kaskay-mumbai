@@ -17,12 +17,13 @@ export const colors = {
   textDark: "#2C1A0E",
   textMid: "#6B4226",
   textLight: "#A07850",
-  textMuted: "#C4A882",
+  textMuted: "rgba(85,75,62,1)",
 
   // UI
   white: "#FFFFFF",
   border: "#C4A882",
   shadow: "rgba(44, 26, 14, 0.15)",
+  black:"#000000"
 }
 
 export const fonts = {

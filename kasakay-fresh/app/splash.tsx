@@ -45,7 +45,7 @@ const SplashScreen = () => {
                     useNativeDriver: false
                 })
             ]).start(() => {
-                router.replace("/")
+                router.replace("/home")
             })
         }, 2000);
         return () => clearTimeout(timer)
