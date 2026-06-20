@@ -46,10 +46,8 @@ export default function VintageCard({ article, onPress }: Props) {
         <View
             style={{
                 backgroundColor: "#3A1712",
-                marginHorizontal: 10,
-                marginBottom: 16,
-                padding: 7,
-
+                padding: 4,
+                marginBottom:10,
                 borderRadius: 30,
 
                 borderWidth: 2,
@@ -80,7 +78,7 @@ export default function VintageCard({ article, onPress }: Props) {
                 {/* 🚂 TRAIN WINDOW IMAGE */}
                 <View
                     style={{
-                        margin: 10,
+                        margin: 4,
 
                         backgroundColor: "#777777", // outer metal frame
                         padding: 8,

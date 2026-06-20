@@ -8,7 +8,9 @@ import { useRouter } from "expo-router"
 import axios from "axios"
 import { colors, spacing, radius } from "../constants/theme"
 import VintageCard from "../components/VintageCard"
-import { Mic } from "lucide-react-native"
+import { Mic, CircleX } from "lucide-react-native"
+import MusicCard from "../components/MusicCard"
+
 
 const { width } = Dimensions.get("window")
 const API_URL = "http://localhost:3000"
@@ -33,6 +35,8 @@ export default function HomeScreen() {
     const [refreshing, setRefreshing] = useState(false)
     const [activeTab, setActiveTab] = useState("FEED")
     const [search, setSearch] = useState("")
+    const [musicPlaying, setMusicPlaying] = useState(false)
+    const [showMusic, setShowMusic] = useState(true)
 
     const fetchArticles = async () => {
         try {
@@ -53,10 +57,8 @@ export default function HomeScreen() {
 
         <View
             style={{
-                backgroundColor: colors.maroon,
-                paddingTop: 45,
-                paddingHorizontal: 12,
-                paddingBottom: 0,
+                flex: 1,
+                backgroundColor: colors.parchment
             }}
         >
             {/* Train outer frame */}
@@ -77,7 +79,7 @@ export default function HomeScreen() {
                 {/* Window glass */}
                 <View
                     style={{
-                        backgroundColor: "#D8C7A2",
+                        backgroundColor: "rgb(87,11,0,1)",
                         borderRadius: 22,
                         padding: 10,
                     }}
@@ -219,6 +221,60 @@ export default function HomeScreen() {
                 </View>
 
             </View>
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingVertical: 10,
+                    backgroundColor: colors.parchment,
+                    gap: 10
+                }}
+            >
+                <CircleX size={20} color={"#8A5A2B"} />
+
+                {/* left strips */}
+                <View
+                    style={{
+                        flexDirection: "row",
+                        gap: 3
+                    }}
+                >
+                    <View style={{ width: 18, height: 3, backgroundColor: "#8A5A2B" }} />
+                    <View style={{ width: 18, height: 3, backgroundColor: "#8A5A2B" }} />
+                    <View style={{ width: 18, height: 3, backgroundColor: "#8A5A2B" }} />
+                </View>
+
+
+
+                <Text
+                    style={{
+                        color: "#9B1C1C",
+                        fontSize: 16,
+                        fontWeight: "900",
+                        letterSpacing: 2
+                    }}
+                >
+                    मध्य रेल्वे
+                </Text>
+
+
+
+                {/* right strips */}
+                <View
+                    style={{
+                        flexDirection: "row",
+                        gap: 3
+                    }}
+                >
+                    <View style={{ width: 18, height: 3, backgroundColor: "#8A5A2B" }} />
+                    <View style={{ width: 18, height: 3, backgroundColor: "#8A5A2B" }} />
+                    <View style={{ width: 18, height: 3, backgroundColor: "#8A5A2B" }} />
+                </View>
+                <CircleX size={20} color={"#8A5A2B"} />
+
+            </View>
+
 
             <View
                 style={{
@@ -233,17 +289,7 @@ export default function HomeScreen() {
 
 
                 {/* 🚂 TRAIN WINDOW HEADER */}
-                <View
-                    style={{
-                        backgroundColor: colors.maroon,
-                        paddingTop: 45,
-                        paddingHorizontal: 12,
-                    }}
-                >
 
-                    {/* paste your whole train window component here */}
-
-                </View>
 
 
 
@@ -282,7 +328,7 @@ export default function HomeScreen() {
                             }
                         >
 
-                            <View style={{ height: spacing.md }} />
+                            <View style={{ height: 4 }} />
 
 
                             {
@@ -309,6 +355,13 @@ export default function HomeScreen() {
 
                     )
                 }
+                {showMusic && (
+                    <MusicCard
+                        isPlaying={musicPlaying}
+                        onToggle={() => setMusicPlaying(!musicPlaying)}
+                        onClose={() => setShowMusic(false)}
+                    />
+                )}
             </View>
         </View>
     )
