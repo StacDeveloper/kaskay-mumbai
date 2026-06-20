@@ -14,7 +14,7 @@ import MusicCard from "../components/MusicCard"
 
 const { width } = Dimensions.get("window")
 const API_URL = "http://localhost:3000"
-const TABS = ["FEED", "NEWS", "UPDATES"]
+const TABS = ["FEED", "LATEST", "LOCALS","MUSIC","MOVIES"]
 
 type Article = {
     id: string
@@ -37,6 +37,7 @@ export default function HomeScreen() {
     const [search, setSearch] = useState("")
     const [musicPlaying, setMusicPlaying] = useState(false)
     const [showMusic, setShowMusic] = useState(true)
+    const [focus, setFocus] = useState(false)
 
     const fetchArticles = async () => {
         try {
@@ -131,6 +132,8 @@ export default function HomeScreen() {
                                 paddingHorizontal: 14,
                                 borderWidth: 1,
                                 borderColor: "#8A5A2B",
+                                elevation:0
+                                
                             }}
                         >
 
@@ -144,12 +147,21 @@ export default function HomeScreen() {
                                 onChangeText={setSearch}
                                 placeholder="शोधा मुंबई, लोक आणि गाणी..."
                                 placeholderTextColor="#5B4636"
+                                underlineColorAndroid={"transparent"}
+                                selectionColor="#8A5A2B"
+                                cursorColor={"#8A5A2B"}
                                 style={{
                                     flex: 1,
                                     color: "#000",
                                     fontSize: 13,
-                                    marginLeft: 8
+                                    marginLeft: 8,
+                                    outlineColor:"none",
+                                    borderWidth:0
                                 }}
+                                
+                                onFocus={()=>setFocus(false)}
+                                onBlur={()=>setFocus(false)}
+                                
                             />
 
 

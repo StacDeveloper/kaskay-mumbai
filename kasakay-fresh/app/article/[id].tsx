@@ -1,136 +1,307 @@
-import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from "react-native"
-import type { Article } from "../../types/types"
-import { useLocalSearchParams, useRouter } from "expo-router"
-import { useEffect, useState } from "react"
-import axios from "axios"
-import * as speech from "expo-speech"
+import {
+    View, Text, ScrollView, Image, TouchableOpacity,
+    ActivityIndicator, Dimensions, Animated, NativeSyntheticEvent, NativeScrollEvent
+} from "react-native"
 
+import { useLocalSearchParams, useRouter } from "expo-router"
+import { useEffect, useRef, useState } from "react"
+import axios from "axios"
+import { colors, spacing, radius } from "../../constants/theme"
+import Punches from "../../components/PerformationRow"
+import { Undo2 } from "lucide-react-native"
+
+
+const { width } = Dimensions.get("window")
 const API_URL = "http://localhost:3000"
 
-const ArticleDetail = () => {
+type Article = {
+    id: string
+    title: string
+    subtitle: string | null
+    body: string
+    summary: string | null
+    author: string | null
+    category: string
+    imageUrl: string | null
+    readTimeMins: number | null
+    publishedAt: string
+    tags: string[] | null
+    source: string | null
+}
+
+export default function ArticleDetail() {
     const { id } = useLocalSearchParams()
     const router = useRouter()
     const [article, setArticle] = useState<Article | null>(null)
-    const [loading, setLoading] = useState<boolean>(false)
-    const [speak, setSpeak] = useState<boolean>(false)
+    const [loading, setLoading] = useState(true)
+    const [goback, setGoback] = useState(false)
 
-    const handlegoBack = () => {
-        if (router.canGoBack()) {
-            router.back()
+
+    const backButton = useRef(new Animated.Value(-80)).current
+
+
+    const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent
+        const isNearEnd = layoutMeasurement.height + contentOffset.y >= contentSize.height - 200
+
+        if (isNearEnd && !goback) {
+            setGoback(true)
+            Animated.spring(backButton, {
+                toValue: 30,
+                useNativeDriver: false,
+                friction: 6,
+                tension: 80,
+            }).start()
         }
-        router.replace("/")
-    }
 
-    const handleSpeak = () => {
-        if (speak) {
-            setSpeak(false)
-            return
-        }
-        setSpeak(true)
-        speech.speak(article?.body!, {
-            language: "mr-IN",
-            onDone: () => setSpeak(false),
-            onError: () => setSpeak(false)
-        })
-    }
-
-    const fetchParticularArticle = async (id: string) => {
-        setLoading(true)
-        try {
-            const findarticle = await axios.get(`${API_URL}/api/articles/${id}`)
-            setArticle(findarticle.data.data[0])
-        } catch (error) {
-            console.log(error)
-        } finally {
-            setLoading(false)
+        if (!isNearEnd && goback) {
+            setGoback(false)
+            Animated.spring(backButton, {
+                toValue: -80,
+                useNativeDriver: false,
+                friction: 6,
+            }).start()
         }
     }
-    console.log(article)
+
     useEffect(() => {
-        fetchParticularArticle(id as string)
+        axios.get(`${API_URL}/api/articles/${id}`)
+            .then(res => setArticle(res.data.data[0]))
+            .catch(console.error)
+            .finally(() => setLoading(false))
     }, [id])
 
-    if (loading) {
-        return (
-            <View className="flex-1 items-center justify-center bg-white">
-                <ActivityIndicator color="#f97316" size="large" />
-            </View>
-        )
-    }
-    if (!article) {
-        return (
-            <View className="flex-1 items-center justify-center bg-white">
-                <Text className="text-gray-400">बातमी सापडली नाही</Text>
-            </View>
-        )
-    }
-    return (
-        <View className="flex-1 bg-white">
-            <TouchableOpacity
-                onPress={handlegoBack}
-                className="absolute top-12 left-4 w-9 z-10 h-9 bg-white rounded-full items-center shadow "
-            >
-                <Text className="text-gray-700 text-lg">←</Text>
-            </TouchableOpacity>
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {article.imageUrl && (
-                    <Image
-                        source={{ uri: article.imageUrl }}
-                        className="w-full h-56"
-                        resizeMode="cover"
-                    />
-                )}
-                <View className="px-5 pt-5 pb-10">
-                    <View className="bg-orange-100 sefl-start px-3 py-1 rounded-full mb-3">
-                        <Text className="text-orange-500 text-xs font-medium">{article.category}</Text>
-                    </View>
-                    <Text className="text-gray-900 text-xl font-bold leading-8">
-                        {article.title}
-                    </Text>
-                    {article.subtitle && (
-                        <Text className="text-gray-500 text-sm mt-2 leading-6">{article.subtitle}</Text>
-                    )}
-
-                    <View className="flex-row items-center mt-4 pb-4 border-b border-gray-100 gap-2">
-                        <Text className="text-gray-400 text-xs">{article.author}</Text>
-                        <Text className="text-gray-300 text-xs">•</Text>
-                        <Text className="text-gray-400 text-xs">{article.readTimeMins} मि. वाचन</Text>
-                        <Text className="text-gray-300 text-xs">•</Text>
-                        <Text className="text-gray-400 text-xs">{new Date(article.publishedAt).toLocaleDateString("mr-IN")}</Text>
-                    </View>
-
-                    <TouchableOpacity
-                        onPress={handleSpeak}
-                        className="flex-row items-center gap-2 mt-4 mb-5 bg-orange-50 self-start px-4 py-2 rounded-full">
-                        <Text className="text-orange-500 text-sm">{speak ? "🔇" : "🔊 हा लेख ऐका"}</Text>
-                    </TouchableOpacity>
-
-                    {article.body && article.body.split("\n\n").map((para, i) => (
-                        <Text
-                            key={i}
-                            className="text-gray-800 text-base leading-7 mb-4"
-                        >
-                            {para}
-                        </Text>
-                    ))}
-
-                    {article.tags && article.tags.length > 0 && (
-                        <View className="flex-row flex-wrap gap-2 mt-4">
-                            {article.tags.map((tag) => (
-                                <View
-                                    key={tag}
-                                    className="bg-gray-100 px-3 py-1 rounded-full"
-                                >
-                                    <Text className="text-gray-500 text-xs">#{tag}</Text>
-                                </View>
-                            ))}
-                        </View>
-                    )}
-
-                </View>
-            </ScrollView>
+    if (loading) return (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.parchment }}>
+            <ActivityIndicator color={colors.maroon} size="large" />
         </View>
     )
 
+    if (!article) return (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.parchment }}>
+            <Text style={{ color: colors.textMid }}>बातमी सापडली नाही</Text>
+        </View>
+    )
+
+    return (
+        <View style={{ flex: 1, backgroundColor: "black" }}>
+
+            <Animated.View
+                style={{
+                    zIndex: 100,
+                    position: "absolute",
+                    bottom: 40,
+                    left: backButton,
+                    alignItems: "center",
+                    justifyContent: "center",
+
+
+                }}
+            >
+                <TouchableOpacity
+                    style={{
+                        zIndex: 100,
+                        borderRadius: 20,
+                        backgroundColor: colors.white,
+                        position: "absolute", bottom: 20,
+                        height: 50,
+                        width: 50,
+                        left: 20,
+                        shadowColor: "#0000", shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 5,
+                        borderColor:colors.black
+                    }}
+                    onPress={() => router.replace("/home")}
+                >
+
+                    <Undo2 style={{ position: "absolute", top: 5, left: 5, right: 5, bottom: 5 }} color={colors.maroon} size={20} height={40} width={40} />
+                </TouchableOpacity>
+            </Animated.View>
+            {/* ── MAROON HEADER ── */}
+            <ScrollView
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+                showsVerticalScrollIndicator={false}>
+                <ScrollView showsVerticalScrollIndicator={false}>
+
+                    {/* ── HERO IMAGE ── */}
+                    {article.imageUrl && (
+                        <Image
+                            source={{ uri: article.imageUrl }}
+                            style={{ width: "100%", height: 220 }}
+                            resizeMode="cover"
+                        />
+                    )}
+
+                    {/* ── TICKET STYLE ARTICLE BODY ── */}
+                    <View style={{ marginHorizontal: spacing.md, marginTop: spacing.md }}>
+
+                        <Punches position="bottom" />
+
+                        <View style={{
+                            backgroundColor: colors.parchmentCard,
+                            borderLeftWidth: 1.5,
+                            borderRightWidth: 1.5,
+                            borderColor: "#C8A45D",
+                            padding: spacing.md,
+                        }}>
+
+                            {/* Category + meta row */}
+                            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.sm }}>
+                                <View style={{
+                                    backgroundColor: colors.maroon,
+                                    paddingHorizontal: 10, paddingVertical: 4,
+                                    borderRadius: radius.full,
+                                }}>
+                                    <Text style={{ color: colors.white, fontSize: 11, fontWeight: "700" }}>
+                                        🚂 {article.category}
+                                    </Text>
+                                </View>
+                                <View style={{ flexDirection: "row", gap: 10 }}>
+                                    <Text style={{ color: colors.textMuted, fontSize: 11 }}>
+                                        👁 {article.readTimeMins} मि.
+                                    </Text>
+                                    <Text style={{ color: colors.textMuted, fontSize: 11 }}>
+                                        🕐 {new Date(article.publishedAt).toLocaleDateString("mr-IN")}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Decorative divider */}
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing.sm }}>
+                                <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+                                <Text style={{ color: colors.textMuted, fontSize: 10 }}>≡</Text>
+                                <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+                            </View>
+
+                            {/* Title */}
+                            <Text style={{
+                                color: colors.textDark,
+                                fontSize: 22,
+                                fontWeight: "900",
+                                lineHeight: 32,
+                                marginBottom: spacing.xs,
+                            }}>
+                                {article.title}
+                            </Text>
+
+                            {/* Subtitle */}
+                            {article.subtitle && (
+                                <Text style={{
+                                    color: colors.textMid,
+                                    fontSize: 14,
+                                    lineHeight: 22,
+                                    marginBottom: spacing.sm,
+                                    fontStyle: "italic",
+                                }}>
+                                    {article.subtitle}
+                                </Text>
+                            )}
+
+                            {/* Author */}
+                            <View style={{
+                                flexDirection: "row", alignItems: "center",
+                                gap: 6, marginBottom: spacing.md,
+                                paddingBottom: spacing.sm,
+                                borderBottomWidth: 1, borderBottomColor: colors.border,
+                            }}>
+                                <View style={{
+                                    width: 28, height: 28, borderRadius: 14,
+                                    backgroundColor: colors.maroon,
+                                    alignItems: "center", justifyContent: "center",
+                                }}>
+                                    <Text style={{ color: colors.white, fontSize: 12 }}>✍</Text>
+                                </View>
+                                <Text style={{ color: colors.black, fontSize: 12, fontWeight: "800" }}>
+                                    {article.author ?? "Kasakay Mumbai"}
+                                </Text>
+                            </View>
+
+                            {/* Voice button */}
+                            <TouchableOpacity style={{
+                                flexDirection: "row", alignItems: "center", gap: 8,
+                                backgroundColor: colors.maroon,
+                                alignSelf: "flex-start",
+                                paddingHorizontal: 16, paddingVertical: 8,
+                                borderRadius: radius.full,
+                                marginBottom: spacing.md,
+                            }}>
+                                <Text style={{ color: colors.white, fontSize: 13, fontWeight: "700" }}>
+                                    🔊 हा लेख ऐका
+                                </Text>
+                            </TouchableOpacity>
+
+                            {/* Summary box */}
+                            {article.summary && (
+                                <View style={{
+                                    backgroundColor: colors.parchmentDark,
+                                    borderLeftWidth: 3, borderLeftColor: colors.maroon,
+                                    padding: spacing.sm,
+                                    borderRadius: radius.sm,
+                                    marginBottom: spacing.md,
+                                }}>
+                                    <Text style={{ color: colors.textMid, fontSize: 13, lineHeight: 20, fontStyle: "italic" }}>
+                                        "{article.summary}"
+                                    </Text>
+                                </View>
+                            )}
+
+                            {/* Body paragraphs */}
+                            {article.body.split("\n\n").map((para, i) => (
+                                <Text key={i} style={{
+                                    color: colors.textDark,
+                                    fontSize: 15,
+                                    lineHeight: 26,
+                                    marginBottom: spacing.md,
+                                    textAlign: "justify",
+                                }}>
+                                    {para}
+                                </Text>
+                            ))}
+
+                            {/* Tags */}
+                            {article.tags && article.tags.length > 0 && (
+                                <View>
+                                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing.sm }}>
+                                        <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+                                        <Text style={{ color: colors.textMuted, fontSize: 10 }}>टॅग्स</Text>
+                                        <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+                                    </View>
+                                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                                        {article.tags.map(tag => (
+                                            <View key={tag} style={{
+                                                backgroundColor: colors.parchmentDark,
+                                                paddingHorizontal: 10, paddingVertical: 4,
+                                                borderRadius: radius.full,
+                                                borderWidth: 1, borderColor: colors.border,
+                                            }}>
+                                                <Text style={{ color: colors.textMid, fontSize: 11 }}>#{tag}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                            )}
+
+                        </View>
+
+                        <Punches position="top" />
+
+                    </View>
+
+                    {/* KKM stamp at bottom */}
+                    <View style={{ alignItems: "center", paddingVertical: spacing.lg }}>
+                        <Text style={{ color: colors.white, fontSize: 10, letterSpacing: 2 }}>
+                            ★ KASAKAY MUMBAI ★
+                        </Text>
+                        <Text style={{ color: colors.white, fontSize: 9, marginTop: 4 }}>
+                            आपलं शहर. आपली माणसं.
+                        </Text>
+                    </View>
+
+                    <View style={{ height: spacing.xl }} />
+                </ScrollView>
+            </ScrollView>
+        </View>
+    )
 }
-export default ArticleDetail
