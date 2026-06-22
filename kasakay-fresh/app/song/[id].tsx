@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,11 @@ import {
   StyleSheet,
   Dimensions,
   SafeAreaView,
+  Animated,
+  Easing
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import {RailwayFooter,RailwayHeader} from "../../components/RailwayHeaderFooter"
+import { RailwayFooter, RailwayHeader } from "../../components/RailwayHeaderFooter"
 import PinkStripesBackground from '../../components/PinkStrips';
 
 const { width } = Dimensions.get('window');
@@ -58,11 +60,91 @@ const Punches = () => {
   );
 };
 
+const PinkStripeBand = ({
+  count = 30,
+  stripeWidth = 14,
+  gap = 10,
+  height = 110,
+  skew = '20deg',
+  direction = 'right',
+  color = '#D4537E',
+
+}) => {
+  const stripes = Array.from({ length: count }, (_, i) => i);
+
+  return (
+    <View style={[styles.band, { height }]}>
+      {stripes.map((i) => (
+        <View
+          key={i}
+          style={{
+            width: stripeWidth,
+            height: 100, // overshoot so skew doesn't clip corners
+            backgroundColor: color,
+            marginRight: gap,
+            transform: [
+              { skewX: direction === 'right' ? skew : `-${skew}` },
+            ],
+          }}
+        />
+      ))}
+    </View>
+  );
+};
+
+const RunningTrain = ({ duration = 6000, position = "right" }) => {
+  const TRAIN_WIDTH = 220;
+  const { width: SCREEN_WIDTH } = Dimensions.get('window');
+  const start = position === "right" ? -TRAIN_WIDTH : SCREEN_WIDTH;
+  const end = position === "right" ? SCREEN_WIDTH : -TRAIN_WIDTH;
+  const translateX = useRef(new Animated.Value(start)).current;
+  useEffect(() => {
+    const animate = () => {
+      translateX.setValue(start);
+      Animated.timing(translateX, {
+        toValue: end,
+        duration,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }).start(() => animate()); // loop
+    };
+    animate();
+  }, []);
+
+  return (
+    <View style={styles.track}>
+      <View style={styles.line} />
+      <Animated.View
+        style={[styles.train, { transform: [{ translateX }] }]}
+      >
+        {/* engine */}
+        <View style={styles.engine} />
+        {/* coaches — mapped, same pattern as your stripes */}
+        {[0, 1].map((i) => (
+          <View key={i} style={styles.coach} />
+        ))}
+      </Animated.View>
+    </View>
+  );
+};
+
 export default function MusicScreen() {
+  ;
   return (
     <SafeAreaView style={styles.screen}>
+      <View
+        style={{
+          position: "relative",
+          top: -70,
+          right: 2
+        }}
+      >
+        <PinkStripeBand
+          direction='left'
+        />
+      </View>
+      <RunningTrain position='left' duration={6000} />
       <RailwayHeader />
-
       {/* ARTIST IMAGE TICKET CARD */}
       <View style={styles.ticketCard}>
         <PinkStripesBackground />
@@ -120,7 +202,18 @@ export default function MusicScreen() {
           </View>
         </View>
       </View>
-      <RailwayFooter />
+
+      <View
+        style={{
+          position: "relative",
+          top: 100,
+        }}>
+        <RunningTrain position='right' duration={6000} />
+        <RailwayFooter />
+        <PinkStripeBand
+          direction='right'
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -130,6 +223,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(246,245,246,1)',
     justifyContent: 'center',
+    position: "relative"
   },
 
   ticketCard: {
@@ -280,5 +374,42 @@ const styles = StyleSheet.create({
     height: HOLE_SIZE,
     borderRadius: HOLE_RADIUS,
     backgroundColor: 'white',
+  },
+  band: {
+    flexDirection: 'row',
+    overflow: 'hidden',
+    width: '100%',
+  },
+  track: {
+    height: 40,
+    width: '100%',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  line: {
+    height: 2,
+    backgroundColor: '#B4B2A9',
+    width: '100%',
+    position: 'absolute',
+    bottom: 8,
+  },
+  train: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    position: 'absolute',
+  },
+  engine: {
+    width: 50,
+    height: 26,
+    backgroundColor: '#D4537E',
+    borderRadius: 4,
+    marginRight: 4,
+  },
+  coach: {
+    width: 60,
+    height: 20,
+    backgroundColor: '#ED93B1',
+    borderRadius: 3,
+    marginRight: 4,
   },
 });
